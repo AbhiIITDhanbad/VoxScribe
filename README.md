@@ -1,18 +1,21 @@
 <div align="center">
   <h1>🎙️ VoxScribe</h1>
-  <p><strong>Advanced End-to-End Speech-to-Text Recognition MLOps Pipeline</strong></p>
+  <p><strong>End-to-End Speech-to-Text Recognition MLOps Pipeline</strong></p>
 </div>
 
 ---
 
 ## 📌 Project Overview
-**VoxScribe** is a fully autonomous Machine Learning lifecycle system targeted at generating high-accuracy transcriptions from audio inputs. Engineered with deep modularity in mind, the project covers everything from robust cloud-based data ingestion (AWS S3) to deep neural network training, evaluation, and serving via an asynchronous FastAPI backend. 
+**VoxScribe** is a fully autonomous Machine Learning lifecycle system targeted at generating high-accuracy transcriptions from audio inputs. Engineered with deep modularity in mind, the project covers everything from robust cloud-based data ingestion (AWS S3) to deep neural network training, evaluation, and serving via an asynchronous FastAPI backend except the aws deployment because it is paid and costly for me like college student.
 
 The primary dataset supported is the prestigious **LJSpeech-1.1** dataset, and the model architecture centers around a custom-built, TensorFlow-based **Speech Transformer** optimized natively without high-level abstraction bloat. 
 
 This repository was meticulously constructed over intense development cycles to encapsulate true production standards inside an enterprise MLOps framework. VoxScribe brings together decoupled model layers, deep S3 synchronization protocols, custom logging semantics, and scalable containerization.
 
 ---
+
+## Checkout Demo - https://drive.google.com/file/d/1b5CxrVFAzC_ofrHqNA0nSmODQLYHCnpf/view?usp=sharing
+## AWS Cloud Storage Evidence - https://drive.google.com/drive/folders/1JJsR9BEPHMY6wOBhTMH7QuHer9Kr7TD8?usp=sharing
 
 ## 🧠 Neural Architecture & Deep Learning Specifications
 Unlike simple API wrappers, VoxScribe implements a scratch-built Deep Neural Network using the **Keras Subclassing API**, offering granular operational control over gradient tape calculation and loss masking.
