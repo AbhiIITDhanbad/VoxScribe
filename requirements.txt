@@ -1,0 +1,12 @@
+# -e .
+
+from_root
+fastapi
+uvicorn
+numpy
+python-multipart
+jinja2
+tensorflow
+protobuf
+pydub
+-e .
