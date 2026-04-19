@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Speech to Text</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --surface-color: rgba(26, 32, 53, 0.7);
+            --surface-border: rgba(255, 255, 255, 0.08);
+            --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            --text-main: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-accent: #22d3ee;
+            --glow: rgba(79, 70, 229, 0.5);
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(79, 70, 229, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(6, 182, 212, 0.15), transparent 25%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            z-index: 10;
+        }
+
+        /* Glass Panel */
+        .glass-panel {
+            background: var(--surface-color);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--surface-border);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Top Bar Highlight */
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+            opacity: 0.9;
+        }
+
+        /* Typography */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.02);
+            position: relative;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #06b6d4;
+            background: rgba(6, 182, 212, 0.04);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px var(--glow);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1.5rem;
+            background: rgba(6, 182, 212, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #06b6d4;
+        }
+
+        .upload-icon svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hints {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Selected File Status */
+        .file-status {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .file-status.active {
+            display: flex;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .file-icon {
+            color: #22c55e;
+            display: flex;
+        }
+        .file-icon svg { width: 24px; height: 24px; }
+
+        .file-name {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        /* Action Buttons */
+        .actions {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px -5px var(--glow);
+            font-family: var(--font-sans);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .btn-primary.enabled {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .btn-primary.enabled:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 15px 25px -5px var(--glow);
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Results Area */
+        .result-container {
+            display: none;
+            margin-top: 2rem;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            animation: fadeIn 0.5s ease forwards;
+            position: relative;
+        }
+
+        .result-container.active { display: block; }
+        .result-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-accent);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .transcription-text {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #f8fafc;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            word-wrap: break-word;
+            min-height: 80px;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 1.2rem;
+            right: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-sans);
+        }
+        .copy-btn:hover { background: rgba(255,255,255,0.2); }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="glass-panel">
+            <div class="header">
+                <h1>VoxScribe AI</h1>
+                <p class="subtitle">Next-gen Speech to Text Recognition</p>
+            </div>
+
+            <!-- Upload Area -->
+            <div class="upload-area" id="dropzone" onclick="document.getElementById('audio-upload').click()">
+                <div class="upload-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                </div>
+                <div class="upload-text">Click or Drag audio to upload</div>
+                <div class="upload-hints">Supports standard audio formats (WAV, MP3, etc.)</div>
+                
+                <form id="upload-form">
+                    <input type="file" id="audio-upload" accept="audio/*">
+                </form>
+            </div>
+
+            <!-- File Status Box -->
+            <div class="file-status" id="file-status-box">
+                <div class="file-info">
+                    <div class="file-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="file-name" id="display-filename">recording.wav</div>
+                    </div>
+                </div>
+                <div style="cursor: pointer; color: #ef4444;" onclick="clearFile(event)">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions">
+                <button type="button" class="btn-primary" id="process-btn" onclick="transcribeAudio()">
+                    <span id="btn-text">Transcribe Audio</span>
+                    <div class="spinner" id="btn-spinner"></div>
+                </button>
+            </div>
+
+            <!-- Output Region -->
+            <div class="result-container" id="result-box">
+                <div class="result-label">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    Transcription Result
+                </div>
+                <button class="copy-btn" onclick="copyToClipboard()">Copy Text</button>
+                <div class="transcription-text" id="transcription-output"></div>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="error-box" style="display:none; margin-top:1rem; padding:1rem; background: rgba(239, 68, 68, 0.1); color:#ef4444; border-radius:8px; border: 1px solid rgba(239, 68, 68, 0.2); font-size: 0.9rem;">
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('audio-upload');
+        const fileStatusBox = document.getElementById('file-status-box');
+        const displayFilename = document.getElementById('display-filename');
+        const processBtn = document.getElementById('process-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnSpinner = document.getElementById('btn-spinner');
+        const resultBox = document.getElementById('result-box');
+        const transcriptionOutput = document.getElementById('transcription-output');
+        const errorBox = document.getElementById('error-box');
+
+        // Drag & Drop specific handling
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            let dt = e.dataTransfer;
+            let files = dt.files;
+            if(files.length > 0) {
+                fileInput.files = files; // Assign to input
+                handleFileSelection(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                handleFileSelection(this.files[0]);
+            }
+        });
+
+        function handleFileSelection(file) {
+            if(!file.type.match('audio.*')) {
+                showError("Please select a valid audio file.");
+                return;
+            }
+            displayFilename.textContent = file.name;
+            fileStatusBox.classList.add('active');
+            processBtn.classList.add('enabled');
+            hideError();
+            resultBox.classList.remove('active'); // Hide old result if uploading new
+        }
+
+        function clearFile(e) {
+            e.stopPropagation(); // prevent triggering upload area click
+            fileInput.value = "";
+            fileStatusBox.classList.remove('active');
+            processBtn.classList.remove('enabled');
+            resultBox.classList.remove('active');
+        }
+
+        async function transcribeAudio() {
+            if(!fileInput.files[0]) return;
+            
+            // UI State change to loading Loading
+            btnText.textContent = "Transcribing...";
+            btnSpinner.style.display = "inline-block";
+            processBtn.classList.remove('enabled'); // Prevent multiple clicks
+            dropzone.style.pointerEvents = "none";
+            hideError();
+            resultBox.classList.remove('active');
+
+            const formData = new FormData();
+            formData.append('audio', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if(!response.ok) {
+                    throw new Error(data.detail || "Transcription failed");
+                }
+
+                // Render success
+                transcriptionOutput.textContent = data.transcription;
+                resultBox.classList.add('active');
+
+            } catch (error) {
+                showError("Error: " + error.message);
+            } finally {
+                // UI State restore
+                btnText.textContent = "Transcribe Audio";
+                btnSpinner.style.display = "none";
+                processBtn.classList.add('enabled');
+                dropzone.style.pointerEvents = "auto";
+            }
+        }
+
+        function copyToClipboard() {
+            navigator.clipboard.writeText(transcriptionOutput.textContent)
+                .then(() => alert("Copied to clipboard!"))
+                .catch(err => console.error("Could not copy text: ", err));
+        }
+
+        function showError(msg) {
+            errorBox.textContent = msg;
+            errorBox.style.display = "block";
+        }
+
+        function hideError() {
+            errorBox.style.display = "none";
+        }
+    </script>
+</body>
+</html>
