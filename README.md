@@ -1,6 +1,6 @@
 <div align="center">
   <h1>🎙️ VoxScribe</h1>
-  <p><strong>Production-Grade End-to-End Speech-to-Text MLOps Pipeline</strong></p>
+  <p><strong>End-to-End Speech-to-Text Pipeline</strong></p>
   <p>
     <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python 3.12"/>
     <img src="https://img.shields.io/badge/TensorFlow-2.x-FF6F00?logo=tensorflow&logoColor=white" alt="TensorFlow"/>
